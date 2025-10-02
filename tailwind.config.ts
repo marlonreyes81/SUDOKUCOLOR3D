@@ -113,9 +113,8 @@ export default {
             height: '0',
           },
         },
-        'completed-border': {
-          '0%, 100%': { boxShadow: 'inset 0 0 0 4px hsl(var(--primary) / 0.8)' },
-          '50%': { boxShadow: 'inset 0 0 0 4px hsl(var(--accent) / 0.8)' },
+        'completed-flash': {
+          '50%': { backgroundColor: 'hsl(var(--fluorescent-green))' },
         },
         'color-complete': {
           '0%, 100%': { transform: 'scale(1)', opacity: '1' },
@@ -126,7 +125,7 @@ export default {
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
-        'completed-border': 'completed-border 2s ease-in-out infinite',
+        'completed-flash': 'completed-flash 1.5s ease-in-out infinite',
         'color-complete': 'color-complete 0.5s ease-in-out 3'
       },
     },
