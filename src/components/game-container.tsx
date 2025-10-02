@@ -29,6 +29,7 @@ export function GameContainer() {
     completedCols,
     completedBoxes,
     colorCounts,
+    animatedColor,
     setIsWinDialogOpen,
     startNewGame,
     handleCellClick,
@@ -62,6 +63,7 @@ export function GameContainer() {
         completedRows={completedRows}
         completedCols={completedCols}
         completedBoxes={completedBoxes}
+        animatedColor={animatedColor}
       />
       <ColorPalette
         onColorSelect={handleColorSelect}

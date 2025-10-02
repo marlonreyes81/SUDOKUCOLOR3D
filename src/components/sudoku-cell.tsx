@@ -11,6 +11,7 @@ type SudokuCellProps = {
   isSelected: boolean;
   isConflict: boolean;
   isCompleted: boolean;
+  isAnimating: boolean;
   isDisabled: boolean;
   onClick: () => void;
 };
@@ -23,6 +24,7 @@ export function SudokuCell({
   isSelected,
   isConflict,
   isCompleted,
+  isAnimating,
   isDisabled,
   onClick,
 }: SudokuCellProps) {
@@ -39,7 +41,8 @@ export function SudokuCell({
         isDisabled && "cursor-not-allowed",
         isSelected && !isConflict && "ring-2 ring-primary ring-inset z-10",
         isConflict && "ring-2 ring-destructive ring-inset z-10 animate-pulse",
-        isCompleted && !isConflict && "animate-completed-border"
+        isCompleted && !isConflict && "animate-completed-border",
+        isAnimating && "animate-color-complete"
       )}
       aria-label={`Cell at row ${row + 1}, column ${col + 1}, value ${value || 'empty'}`}
     >

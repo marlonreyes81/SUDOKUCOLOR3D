@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { Grid, Difficulty, Position, CellValue } from "@/lib/types";
 import { generateSudoku, checkSolution, findConflicts } from "@/lib/sudoku";
 import { useToast } from "./use-toast";
@@ -22,6 +22,8 @@ export function useSudokuGame() {
   const [completedCols, setCompletedCols] = useState<number[]>([]);
   const [completedBoxes, setCompletedBoxes] = useState<number[]>([]);
   const [colorCounts, setColorCounts] = useState<Record<number, number>>({});
+  const [animatedColor, setAnimatedColor] = useState<CellValue | null>(null);
+  const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
   const updateColorCounts = useCallback((grid: Grid) => {
@@ -38,6 +40,7 @@ export function useSudokuGame() {
       }
     }
     setColorCounts(counts);
+    return counts;
   }, []);
 
   const updateCompletedAreas = useCallback((grid: Grid) => {
@@ -125,6 +128,13 @@ export function useSudokuGame() {
     } else {
       startNewGame("easy");
     }
+    
+    // Cleanup timeout on unmount
+    return () => {
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+      }
+    };
   }, [startNewGame, updateCompletedAreas, updateColorCounts]);
 
   useEffect(() => {
@@ -147,7 +157,7 @@ export function useSudokuGame() {
   };
 
   const handleColorSelect = (colorValue: CellValue) => {
-    if (!selectedCell || !userGrid || isGameOver) return;
+    if (!selectedCell || !userGrid || isGameOver || colorValue === 0) return;
 
     const { row, col } = selectedCell;
     const newGrid = userGrid.map((r) => [...r]) as Grid;
@@ -165,6 +175,19 @@ export function useSudokuGame() {
         duration: 2000,
       });
     } else {
+      const newCounts = updateColorCounts(newGrid);
+      
+      if (newCounts[colorValue] === GRID_SIZE) {
+        setAnimatedColor(colorValue);
+        if (animationTimeoutRef.current) {
+            clearTimeout(animationTimeoutRef.current);
+        }
+        animationTimeoutRef.current = setTimeout(() => {
+          setAnimatedColor(null);
+          animationTimeoutRef.current = null;
+        }, 3000);
+      }
+
       updateCompletedAreas(newGrid);
       
       const wasRowPreviouslyComplete = completedRows.includes(row);
@@ -254,6 +277,7 @@ export function useSudokuGame() {
     completedCols,
     completedBoxes,
     colorCounts,
+    animatedColor,
     setIsWinDialogOpen,
     startNewGame,
     handleCellClick,

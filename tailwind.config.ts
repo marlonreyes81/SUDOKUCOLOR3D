@@ -113,14 +113,20 @@ export default {
           },
         },
         'completed-border': {
-          '0%, 100%': { boxShadow: 'inset 0 0 0 3px hsl(var(--primary))' },
-          '50%': { boxShadow: 'inset 0 0 0 3px hsl(var(--accent))' },
+          '0%, 100%': { boxShadow: 'inset 0 0 0 4px hsl(var(--primary) / 0.8)' },
+          '50%': { boxShadow: 'inset 0 0 0 4px hsl(var(--accent) / 0.8)' },
+        },
+        'color-complete': {
+          '0%, 100%': { transform: 'scale(1)', opacity: '1' },
+          '25%, 75%': { transform: 'scale(1.1)', opacity: '0.8' },
+          '50%': { transform: 'scale(0.9)', opacity: '1' },
         }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
-        'completed-border': 'completed-border 1.5s ease-in-out infinite',
+        'completed-border': 'completed-border 2s ease-in-out infinite',
+        'color-complete': 'color-complete 0.5s ease-in-out 3'
       },
     },
   },

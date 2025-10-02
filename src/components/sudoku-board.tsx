@@ -1,5 +1,5 @@
 
-import type { Grid, Position } from "@/lib/types";
+import type { Grid, Position, CellValue } from "@/lib/types";
 import { SudokuCell } from "./sudoku-cell";
 import { BOX_SIZE } from "@/lib/constants";
 
@@ -13,6 +13,7 @@ type SudokuBoardProps = {
   completedRows: number[];
   completedCols: number[];
   completedBoxes: number[];
+  animatedColor: CellValue | null;
 };
 
 export function SudokuBoard({
@@ -25,6 +26,7 @@ export function SudokuBoard({
   completedRows,
   completedCols,
   completedBoxes,
+  animatedColor,
 }: SudokuBoardProps) {
   return (
     <div className="relative w-full aspect-square bg-card p-2 rounded-xl shadow-lg">
@@ -39,6 +41,7 @@ export function SudokuBoard({
             );
             const boxIndex = Math.floor(rowIndex / BOX_SIZE) * BOX_SIZE + Math.floor(colIndex / BOX_SIZE);
             const isCompleted = completedRows.includes(rowIndex) || completedCols.includes(colIndex) || completedBoxes.includes(boxIndex);
+            const isAnimating = value !== 0 && value === animatedColor;
 
             return (
               <SudokuCell
@@ -50,6 +53,7 @@ export function SudokuBoard({
                 isSelected={isSelected}
                 isConflict={isConflict}
                 isCompleted={isCompleted}
+                isAnimating={isAnimating}
                 isDisabled={isGameOver}
                 onClick={() => onCellClick(rowIndex, colIndex)}
               />
@@ -67,5 +71,3 @@ export function SudokuBoard({
     </div>
   );
 }
-
-    
