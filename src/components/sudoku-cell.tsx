@@ -49,7 +49,7 @@ export function SudokuCell({
       {value !== 0 && (
         <div
           className={cn(
-            "w-[85%] h-[85%] rounded-md transition-all",
+            "w-[85%] h-[85%] transition-all diamond",
             colorClass,
             "shadow-2xl"
           )}
