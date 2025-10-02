@@ -4,24 +4,24 @@ import type { CellValue } from "@/lib/types";
 
 type SudokuCellProps = {
   value: CellValue;
+  row: number;
+  col: number;
   isInitial: boolean;
   isSelected: boolean;
   isConflict: boolean;
   isDisabled: boolean;
   onClick: () => void;
-  row: number;
-  col: number;
 };
 
 export function SudokuCell({
   value,
+  row,
+  col,
   isInitial,
   isSelected,
   isConflict,
   isDisabled,
   onClick,
-  row,
-  col,
 }: SudokuCellProps) {
   const colorClass = value !== 0 ? COLORS[value].class : "";
 

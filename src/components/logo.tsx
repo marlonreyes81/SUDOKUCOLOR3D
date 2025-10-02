@@ -9,7 +9,7 @@ export function Logo() {
       <span className="text-orange-500">U</span>
       <span className="text-pink-400"> </span>
       <span className="text-gray-900 dark:text-gray-300">C</span>
-      <span className="text-white drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)] dark:text-gray-200 dark:drop-shadow-none">
+      <span className="text-black dark:text-white drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)] dark:drop-shadow-none">
         O
       </span>
       <span className="text-red-500">L</span>
