@@ -5,7 +5,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { ChevronDown, RefreshCw, Check, Lightbulb } from "lucide-react";
+import { ChevronDown, RefreshCw, Check, Lightbulb, Clock } from "lucide-react";
 import type { Difficulty } from "@/lib/types";
 import { DIFFICULTIES } from "@/lib/constants";
 import {
@@ -22,7 +22,14 @@ type GameControlsProps = {
   onHint: () => void;
   hintsRemaining: number;
   isGameOver: boolean;
+  time: number;
 };
+
+function formatTime(seconds: number) {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
 
 export function GameControls({
   difficulty,
@@ -31,11 +38,12 @@ export function GameControls({
   onHint,
   hintsRemaining,
   isGameOver,
+  time,
 }: GameControlsProps) {
   return (
     <div className="w-full flex justify-between items-center bg-card p-2 rounded-lg shadow-md">
-      <TooltipProvider>
-        <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1">
+        <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="icon" onClick={() => onNewGame(difficulty)}>
@@ -64,8 +72,12 @@ export function GameControls({
               <p>Check Board</p>
             </TooltipContent>
           </Tooltip>
+        </TooltipProvider>
+        <div className="flex items-center gap-2 text-muted-foreground ml-2">
+            <Clock className="h-5 w-5" />
+            <span className="font-mono text-lg">{formatTime(time)}</span>
         </div>
-      </TooltipProvider>
+      </div>
 
       <div className="flex items-center gap-2">
         <Button

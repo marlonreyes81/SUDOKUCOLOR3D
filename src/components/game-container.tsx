@@ -31,6 +31,7 @@ export function GameContainer() {
     colorCounts,
     animatedColor,
     hintsRemaining,
+    time,
     setIsWinDialogOpen,
     startNewGame,
     handleCellClick,
@@ -56,6 +57,7 @@ export function GameContainer() {
         onHint={handleHint}
         hintsRemaining={hintsRemaining}
         isGameOver={isGameOver}
+        time={time}
       />
       <SudokuBoard
         grid={userGrid}

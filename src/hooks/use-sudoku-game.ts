@@ -44,6 +44,7 @@ export function useSudokuGame() {
   const [colorCounts, setColorCounts] = useState<Record<number, number>>({});
   const [animatedColor, setAnimatedColor] = useState<CellValue | null>(null);
   const [hintsRemaining, setHintsRemaining] = useState(3);
+  const [time, setTime] = useState(0);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   
@@ -146,6 +147,7 @@ export function useSudokuGame() {
     setCompletedRows([]);
     setCompletedCols([]);
     setCompletedBoxes([]);
+    setTime(0);
     setHintsRemaining(DIFFICULTIES[newDifficulty].hints);
     updateColorCounts(puzzle);
     if (typeof window !== "undefined") {
@@ -229,6 +231,7 @@ export function useSudokuGame() {
           setInitialGrid(savedGame.initialGrid);
           setUserGrid(savedGame.userGrid);
           setHintsRemaining(savedGame.hintsRemaining ?? DIFFICULTIES[savedGame.difficulty].hints);
+          setTime(savedGame.time ?? 0);
           updateCompletedAreas(savedGame.userGrid);
         } catch (error) {
           console.error("Failed to load saved game", error);
@@ -245,7 +248,7 @@ export function useSudokuGame() {
         clearTimeout(animationTimeoutRef.current);
       }
     };
-  }, [startNewGame]);
+  }, []); // Note: startNewGame is removed from here
 
   useEffect(() => {
     if (userGrid && solution && initialGrid && typeof window !== "undefined") {
@@ -255,10 +258,24 @@ export function useSudokuGame() {
         initialGrid,
         userGrid,
         hintsRemaining,
+        time,
       };
       localStorage.setItem(SAVED_GAME_KEY, JSON.stringify(gameState));
     }
-  }, [userGrid, solution, initialGrid, difficulty, hintsRemaining]);
+  }, [userGrid, solution, initialGrid, difficulty, hintsRemaining, time]);
+
+  useEffect(() => {
+    let timerInterval: NodeJS.Timeout;
+    if (!isGameOver && initialGrid) {
+      timerInterval = setInterval(() => {
+        setTime(prevTime => prevTime + 1);
+      }, 1000);
+    }
+    return () => {
+      clearInterval(timerInterval);
+    };
+  }, [isGameOver, initialGrid]);
+
 
   const handleCellClick = (row: number, col: number) => {
     if (isGameOver) return;
@@ -333,11 +350,12 @@ export function useSudokuGame() {
     colorCounts,
     animatedColor,
     hintsRemaining,
+    time,
     setIsWinDialogOpen,
     startNewGame,
     handleCellClick,
     handleColorSelect,
-    checkBoard,
+checkBoard,
     handleHint,
   };
 }
