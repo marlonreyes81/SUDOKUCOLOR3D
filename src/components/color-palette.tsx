@@ -23,21 +23,27 @@ export function ColorPalette({
       <div className="grid grid-cols-10 gap-2">
         {Object.entries(COLORS).map(([valueStr, { class: colorClass }]) => {
           const value = Number(valueStr) as CellValue;
-          const isColorDisabled =
-            disabled || (colorCounts[value] || 0) >= maxCount;
+          const count = colorCounts[value] || 0;
+          const remaining = maxCount - count;
+          const isColorDisabled = disabled || remaining <= 0;
+
           return (
             <button
               key={value}
               onClick={() => onColorSelect(value)}
               disabled={isColorDisabled}
               className={cn(
-                "aspect-square w-full rounded-md shadow-md hover:scale-110 active:scale-95 transition-transform duration-150 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100",
+                "relative aspect-square w-full rounded-md shadow-md hover:scale-110 active:scale-95 transition-transform duration-150 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100",
                 colorClass
               )}
               aria-label={`Select color ${
                 COLORS[value as keyof typeof COLORS].name
               }`}
-            />
+            >
+              <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-white drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)]">
+                {remaining > 0 ? remaining : ''}
+              </span>
+            </button>
           );
         })}
         <Button
