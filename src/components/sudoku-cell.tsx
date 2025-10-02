@@ -18,8 +18,6 @@ type SudokuCellProps = {
 
 export function SudokuCell({
   value,
-  row,
-  col,
   isInitial,
   isSelected,
   isConflict,
@@ -49,11 +47,9 @@ export function SudokuCell({
       {value !== 0 && (
         <div
           className={cn(
-            "w-[85%] h-[85%] transition-all",
+            "w-[85%] h-[85%] rounded-full transition-all",
             colorClass,
-            "shadow-xl", // The "soft 3D" or "alto relieve" effect
-            isInitial ? "font-bold" : "",
-            "diamond bg-gradient-to-br from-white/30 to-transparent"
+            "shadow-xl"
           )}
         />
       )}
