@@ -18,6 +18,8 @@ type SudokuCellProps = {
 
 export function SudokuCell({
   value,
+  row,
+  col,
   isInitial,
   isSelected,
   isConflict,
@@ -47,7 +49,7 @@ export function SudokuCell({
       {value !== 0 && (
         <div
           className={cn(
-            "w-[85%] h-[85%] rounded-full transition-all",
+            "w-[85%] h-[85%] rounded-md transition-all",
             colorClass,
             "shadow-xl"
           )}
