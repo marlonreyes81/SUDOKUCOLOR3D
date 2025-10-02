@@ -245,7 +245,7 @@ export function useSudokuGame() {
         clearTimeout(animationTimeoutRef.current);
       }
     };
-  }, [startNewGame, updateCompletedAreas]);
+  }, [startNewGame]);
 
   useEffect(() => {
     if (userGrid && solution && initialGrid && typeof window !== "undefined") {
