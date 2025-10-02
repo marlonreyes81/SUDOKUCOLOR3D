@@ -133,12 +133,5 @@ export default {
   },
   plugins: [
     require('tailwindcss-animate'),
-    plugin(function({ addUtilities }) {
-      addUtilities({
-        '.diamond': {
-          'clip-path': 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
-        }
-      })
-    })
   ],
 } satisfies Config;
