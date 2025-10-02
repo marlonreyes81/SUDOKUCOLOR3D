@@ -1,9 +1,11 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
 import type { Grid, Difficulty, Position, CellValue } from "@/lib/types";
 import { generateSudoku, checkSolution, findConflicts } from "@/lib/sudoku";
 import { useToast } from "./use-toast";
+import { GRID_SIZE } from "@/lib/constants";
 
 const SAVED_GAME_KEY = "sudokuColorGameState";
 
@@ -87,6 +89,29 @@ export function useSudokuGame() {
         duration: 2000,
       });
     } else {
+      // Check for row or column completion
+      const isRowComplete = newGrid[row].every(cell => cell !== 0);
+      let isColComplete = true;
+      for (let i = 0; i < GRID_SIZE; i++) {
+        if (newGrid[i][col] === 0) {
+          isColComplete = false;
+          break;
+        }
+      }
+
+      if (isRowComplete) {
+        toast({
+          title: "Row Complete!",
+          description: `You've successfully filled row ${row + 1}.`,
+        });
+      }
+      if (isColComplete) {
+        toast({
+          title: "Column Complete!",
+          description: `You've successfully filled column ${col + 1}.`,
+        });
+      }
+
       // Check for win condition
       const isFilled = newGrid.every(row => row.every(cell => cell !== 0));
       if (isFilled) {
