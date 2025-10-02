@@ -20,7 +20,7 @@ export function ColorPalette({
 }: ColorPaletteProps) {
   return (
     <div className="w-full bg-card p-2 rounded-lg shadow-md">
-      <div className="grid grid-cols-10 gap-2">
+       <div className="grid grid-cols-5 gap-2">
         {Object.entries(COLORS).map(([valueStr, { class: colorClass }]) => {
           const value = Number(valueStr) as CellValue;
           const count = colorCounts[value] || 0;
@@ -40,22 +40,18 @@ export function ColorPalette({
                 COLORS[value as keyof typeof COLORS].name
               }`}
             >
+              <div
+                className={cn(
+                  "absolute inset-0.5 rounded-[5px] transition-all",
+                  "shadow-[inset_0_2px_4px_0_rgba(255,255,255,0.4),inset_0_-2px_4px_0_rgba(0,0,0,0.4)]"
+                )}
+              />
               <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-white drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)]">
-                {remaining > 0 ? remaining : ''}
+                {remaining > 0 ? remaining : '✓'}
               </span>
             </button>
           );
         })}
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => onColorSelect(0)}
-          disabled={disabled}
-          className="aspect-square w-full h-full shadow-md hover:scale-110 active:scale-95 transition-transform"
-          aria-label="Erase cell"
-        >
-          <Eraser className="w-5 h-5" />
-        </Button>
       </div>
     </div>
   );

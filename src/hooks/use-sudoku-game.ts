@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import type { Grid, Difficulty, Position, CellValue } from "@/lib/types";
 import { generateSudoku, checkSolution, findConflicts } from "@/lib/sudoku";
 import { useToast } from "./use-toast";
-import { GRID_SIZE, BOX_SIZE } from "@/lib/constants";
+import { GRID_SIZE, BOX_SIZE, DIFFICULTIES } from "@/lib/constants";
 
 const SAVED_GAME_KEY = "sudokuColorGameState";
 
@@ -23,6 +23,7 @@ export function useSudokuGame() {
   const [completedBoxes, setCompletedBoxes] = useState<number[]>([]);
   const [colorCounts, setColorCounts] = useState<Record<number, number>>({});
   const [animatedColor, setAnimatedColor] = useState<CellValue | null>(null);
+  const [hintsRemaining, setHintsRemaining] = useState(3);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
@@ -93,7 +94,7 @@ export function useSudokuGame() {
     updateColorCounts(grid);
   }, [updateColorCounts]);
 
-  const startNewGame = useCallback((newDifficulty: Difficulty) => {
+    const startNewGame = useCallback((newDifficulty: Difficulty) => {
     setDifficulty(newDifficulty);
     const { solution, puzzle } = generateSudoku(newDifficulty);
     setSolution(solution);
@@ -106,10 +107,109 @@ export function useSudokuGame() {
     setCompletedRows([]);
     setCompletedCols([]);
     setCompletedBoxes([]);
+    setHintsRemaining(DIFFICULTIES[newDifficulty].hints);
     updateColorCounts(puzzle);
     localStorage.removeItem(SAVED_GAME_KEY);
   }, [updateColorCounts]);
 
+
+  const placeColorOnBoard = useCallback(
+    (row: number, col: number, colorValue: CellValue) => {
+      if (!userGrid || isGameOver) return;
+
+      const newGrid = userGrid.map((r) => [...r]) as Grid;
+      newGrid[row][col] = colorValue;
+      setUserGrid(newGrid);
+
+      // We clear conflicts from other cells, and only show new ones
+      const currentConflicts = findConflicts(newGrid, row, col);
+      setConflicts(currentConflicts);
+
+      if (currentConflicts.length > 0) {
+        toast({
+          title: "Conflict!",
+          description:
+            "That color conflicts with another in the same row, column, or box.",
+          variant: "destructive",
+          duration: 2000,
+        });
+      } else {
+        const newCounts = updateColorCounts(newGrid);
+
+        if (newCounts[colorValue] === GRID_SIZE) {
+          setAnimatedColor(colorValue);
+          if (animationTimeoutRef.current) {
+            clearTimeout(animationTimeoutRef.current);
+          }
+          animationTimeoutRef.current = setTimeout(() => {
+            setAnimatedColor(null);
+            animationTimeoutRef.current = null;
+          }, 3000);
+        }
+
+        updateCompletedAreas(newGrid);
+
+        const wasRowPreviouslyComplete = completedRows.includes(row);
+        const isRowNowComplete = newGrid[row].every((cell) => cell !== 0);
+        if (isRowNowComplete && !wasRowPreviouslyComplete) {
+          toast({
+            title: "Row Complete!",
+            description: `You've successfully filled row ${row + 1}.`,
+          });
+        }
+
+        const wasColPreviouslyComplete = completedCols.includes(col);
+        let isColNowComplete = true;
+        for (let i = 0; i < GRID_SIZE; i++) {
+          if (newGrid[i][col] === 0) {
+            isColNowComplete = false;
+            break;
+          }
+        }
+        if (isColNowComplete && !wasColPreviouslyComplete) {
+          toast({
+            title: "Column Complete!",
+            description: `You've successfully filled column ${col + 1}.`,
+          });
+        }
+
+        const boxIndex =
+          Math.floor(row / BOX_SIZE) * BOX_SIZE + Math.floor(col / BOX_SIZE);
+        const wasBoxPreviouslyComplete = completedBoxes.includes(boxIndex);
+        let isBoxNowComplete = true;
+        const boxStartRow = Math.floor(row / BOX_SIZE) * BOX_SIZE;
+        const boxStartCol = Math.floor(col / BOX_SIZE) * BOX_SIZE;
+        for (let i = 0; i < BOX_SIZE; i++) {
+          for (let j = 0; j < BOX_SIZE; j++) {
+            if (newGrid[boxStartRow + i][boxStartCol + j] === 0) {
+              isBoxNowComplete = false;
+              break;
+            }
+          }
+          if (!isBoxNowComplete) break;
+        }
+        if (isBoxNowComplete && !wasBoxPreviouslyComplete) {
+          toast({
+            title: "Box Complete!",
+            description: `You've successfully filled a 3x3 box.`,
+          });
+        }
+
+        // Check for win condition
+        const isFilled = newGrid.every((row) => row.every((cell) => cell !== 0));
+        if (isFilled) {
+          const { isCorrect } = checkSolution(newGrid, solution!);
+          if (isCorrect) {
+            setIsGameOver(true);
+            setIsWinDialogOpen(true);
+            localStorage.removeItem(SAVED_GAME_KEY);
+          }
+        }
+      }
+    },
+    [userGrid, isGameOver, solution, toast, updateColorCounts, updateCompletedAreas, completedRows, completedCols, completedBoxes]
+  );
+  
   useEffect(() => {
     const savedGameRaw = localStorage.getItem(SAVED_GAME_KEY);
     if (savedGameRaw) {
@@ -119,8 +219,8 @@ export function useSudokuGame() {
         setSolution(savedGame.solution);
         setInitialGrid(savedGame.initialGrid);
         setUserGrid(savedGame.userGrid);
+        setHintsRemaining(savedGame.hintsRemaining ?? DIFFICULTIES[savedGame.difficulty].hints);
         updateCompletedAreas(savedGame.userGrid);
-        updateColorCounts(savedGame.userGrid);
       } catch (error) {
         console.error("Failed to load saved game", error);
         startNewGame("easy");
@@ -135,7 +235,7 @@ export function useSudokuGame() {
         clearTimeout(animationTimeoutRef.current);
       }
     };
-  }, [startNewGame, updateCompletedAreas, updateColorCounts]);
+  }, [startNewGame, updateCompletedAreas]);
 
   useEffect(() => {
     if (userGrid && solution && initialGrid) {
@@ -144,10 +244,11 @@ export function useSudokuGame() {
         solution,
         initialGrid,
         userGrid,
+        hintsRemaining,
       };
       localStorage.setItem(SAVED_GAME_KEY, JSON.stringify(gameState));
     }
-  }, [userGrid, solution, initialGrid, difficulty]);
+  }, [userGrid, solution, initialGrid, difficulty, hintsRemaining]);
 
   const handleCellClick = (row: number, col: number) => {
     if (isGameOver) return;
@@ -157,96 +258,35 @@ export function useSudokuGame() {
   };
 
   const handleColorSelect = (colorValue: CellValue) => {
-    if (!selectedCell || !userGrid || isGameOver || colorValue === 0) return;
+    if (!selectedCell || colorValue === 0) return;
+    placeColorOnBoard(selectedCell.row, selectedCell.col, colorValue);
+  };
+  
+  const handleHint = () => {
+    if (isGameOver || hintsRemaining === 0) return;
 
-    const { row, col } = selectedCell;
-    const newGrid = userGrid.map((r) => [...r]) as Grid;
-    newGrid[row][col] = colorValue;
-    setUserGrid(newGrid);
-
-    const currentConflicts = findConflicts(newGrid, row, col);
-    setConflicts(currentConflicts);
-
-    if (currentConflicts.length > 0) {
-      toast({
-        title: "Conflict!",
-        description: "That color conflicts with another in the same row, column, or box.",
-        variant: "destructive",
-        duration: 2000,
-      });
-    } else {
-      const newCounts = updateColorCounts(newGrid);
-      
-      if (newCounts[colorValue] === GRID_SIZE) {
-        setAnimatedColor(colorValue);
-        if (animationTimeoutRef.current) {
-            clearTimeout(animationTimeoutRef.current);
-        }
-        animationTimeoutRef.current = setTimeout(() => {
-          setAnimatedColor(null);
-          animationTimeoutRef.current = null;
-        }, 3000);
-      }
-
-      updateCompletedAreas(newGrid);
-      
-      const wasRowPreviouslyComplete = completedRows.includes(row);
-      const isRowNowComplete = newGrid[row].every(cell => cell !== 0);
-      if (isRowNowComplete && !wasRowPreviouslyComplete) {
+    if (!selectedCell) {
         toast({
-          title: "Row Complete!",
-          description: `You've successfully filled row ${row + 1}.`,
+            title: "Select a cell",
+            description: "Please select an empty cell to use a hint.",
+            variant: "destructive",
+            duration: 3000,
         });
-      }
-      
-      const wasColPreviouslyComplete = completedCols.includes(col);
-      let isColNowComplete = true;
-      for (let i = 0; i < GRID_SIZE; i++) {
-        if (newGrid[i][col] === 0) {
-          isColNowComplete = false;
-          break;
-        }
-      }
-      if (isColNowComplete && !wasColPreviouslyComplete) {
+        return;
+    }
+    
+    if (solution) {
+        const { row, col } = selectedCell;
+        const correctColor = solution[row][col];
+        placeColorOnBoard(row, col, correctColor);
+        setHintsRemaining(prev => prev - 1);
         toast({
-          title: "Column Complete!",
-          description: `You've successfully filled column ${col + 1}.`,
+            title: "Hint Used!",
+            description: `The correct color has been placed. You have ${hintsRemaining-1} hints left.`,
         });
-      }
-
-      const boxIndex = Math.floor(row / BOX_SIZE) * BOX_SIZE + Math.floor(col / BOX_SIZE);
-      const wasBoxPreviouslyComplete = completedBoxes.includes(boxIndex);
-      let isBoxNowComplete = true;
-      const boxStartRow = Math.floor(row / BOX_SIZE) * BOX_SIZE;
-      const boxStartCol = Math.floor(col / BOX_SIZE) * BOX_SIZE;
-      for (let i = 0; i < BOX_SIZE; i++) {
-        for (let j = 0; j < BOX_SIZE; j++) {
-          if (newGrid[boxStartRow + i][boxStartCol + j] === 0) {
-            isBoxNowComplete = false;
-            break;
-          }
-        }
-        if (!isBoxNowComplete) break;
-      }
-      if (isBoxNowComplete && !wasBoxPreviouslyComplete) {
-        toast({
-          title: "Box Complete!",
-          description: `You've successfully filled a 3x3 box.`,
-        });
-      }
-
-      // Check for win condition
-      const isFilled = newGrid.every(row => row.every(cell => cell !== 0));
-      if (isFilled) {
-        const { isCorrect } = checkSolution(newGrid, solution!);
-        if (isCorrect) {
-          setIsGameOver(true);
-          setIsWinDialogOpen(true);
-          localStorage.removeItem(SAVED_GAME_KEY);
-        }
-      }
     }
   };
+
 
   const checkBoard = () => {
     if (!userGrid || !solution) return;
@@ -278,10 +318,12 @@ export function useSudokuGame() {
     completedBoxes,
     colorCounts,
     animatedColor,
+    hintsRemaining,
     setIsWinDialogOpen,
     startNewGame,
     handleCellClick,
     handleColorSelect,
     checkBoard,
+    handleHint,
   };
 }

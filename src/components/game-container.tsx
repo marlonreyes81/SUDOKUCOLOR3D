@@ -30,11 +30,13 @@ export function GameContainer() {
     completedBoxes,
     colorCounts,
     animatedColor,
+    hintsRemaining,
     setIsWinDialogOpen,
     startNewGame,
     handleCellClick,
     handleColorSelect,
     checkBoard,
+    handleHint,
   } = useSudokuGame();
 
   if (!userGrid || !initialGrid) {
@@ -51,6 +53,8 @@ export function GameContainer() {
         difficulty={difficulty}
         onNewGame={startNewGame}
         onValidate={checkBoard}
+        onHint={handleHint}
+        hintsRemaining={hintsRemaining}
         isGameOver={isGameOver}
       />
       <SudokuBoard
@@ -67,7 +71,7 @@ export function GameContainer() {
       />
       <ColorPalette
         onColorSelect={handleColorSelect}
-        disabled={isGameOver}
+        disabled={isGameOver || !selectedCell}
         colorCounts={colorCounts}
         maxCount={GRID_SIZE}
       />

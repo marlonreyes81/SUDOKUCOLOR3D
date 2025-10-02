@@ -17,11 +17,11 @@ export const COLORS: Record<
 
 export const DIFFICULTIES: Record<
   Difficulty,
-  { name: string; clues: number }
+  { name: string; clues: number; hints: number }
 > = {
-  easy: { name: "Easy", clues: 35 },
-  medium: { name: "Medium", clues: 28 },
-  hard: { name: "Hard", clues: 22 },
+  easy: { name: "Easy", clues: 35, hints: 5 },
+  medium: { name: "Medium", clues: 28, hints: 3 },
+  hard: { name: "Hard", clues: 22, hints: 1 },
 };
 
 export const GRID_SIZE = 9;
