@@ -49,10 +49,11 @@ export function SudokuCell({
       {value !== 0 && (
         <div
           className={cn(
-            "w-[85%] h-[85%] rounded-md transition-all",
+            "w-[85%] h-[85%] transition-all",
             colorClass,
-            "shadow-lg", // The "soft 3D" or "alto relieve" effect
-            isInitial ? "font-bold" : ""
+            "shadow-xl", // The "soft 3D" or "alto relieve" effect
+            isInitial ? "font-bold" : "",
+            "diamond bg-gradient-to-br from-white/30 to-transparent"
           )}
         />
       )}
