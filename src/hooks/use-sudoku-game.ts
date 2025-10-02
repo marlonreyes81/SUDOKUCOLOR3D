@@ -364,7 +364,7 @@ export function useSudokuGame() {
     startNewGame,
     handleCellClick,
     handleColorSelect,
-checkBoard,
+    checkBoard,
     handleHint,
   };
 }
