@@ -1,3 +1,4 @@
+
 import { cn } from "@/lib/utils";
 import { COLORS } from "@/lib/constants";
 import type { CellValue } from "@/lib/types";
@@ -9,6 +10,7 @@ type SudokuCellProps = {
   isInitial: boolean;
   isSelected: boolean;
   isConflict: boolean;
+  isCompleted: boolean;
   isDisabled: boolean;
   onClick: () => void;
 };
@@ -20,6 +22,7 @@ export function SudokuCell({
   isInitial,
   isSelected,
   isConflict,
+  isCompleted,
   isDisabled,
   onClick,
 }: SudokuCellProps) {
@@ -35,7 +38,8 @@ export function SudokuCell({
         !isInitial && "cursor-pointer hover:bg-background",
         isDisabled && "cursor-not-allowed",
         isSelected && !isConflict && "ring-2 ring-primary ring-inset z-10",
-        isConflict && "ring-2 ring-destructive ring-inset z-10 animate-pulse"
+        isConflict && "ring-2 ring-destructive ring-inset z-10 animate-pulse",
+        isCompleted && !isConflict && "animate-completed-border"
       )}
       aria-label={`Cell at row ${row + 1}, column ${col + 1}, value ${value || 'empty'}`}
     >

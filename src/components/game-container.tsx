@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useSudokuGame } from "@/hooks/use-sudoku-game";
@@ -23,6 +24,8 @@ export function GameContainer() {
     conflicts,
     isGameOver,
     isWinDialogOpen,
+    completedRows,
+    completedCols,
     setIsWinDialogOpen,
     startNewGame,
     handleCellClick,
@@ -53,6 +56,8 @@ export function GameContainer() {
         selectedCell={selectedCell}
         conflicts={conflicts}
         isGameOver={isGameOver}
+        completedRows={completedRows}
+        completedCols={completedCols}
       />
       <ColorPalette onColorSelect={handleColorSelect} disabled={isGameOver} />
       

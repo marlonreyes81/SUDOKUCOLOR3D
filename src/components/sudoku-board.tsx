@@ -1,3 +1,4 @@
+
 import type { Grid, Position } from "@/lib/types";
 import { SudokuCell } from "./sudoku-cell";
 
@@ -8,6 +9,8 @@ type SudokuBoardProps = {
   selectedCell: Position | null;
   conflicts: Position[];
   isGameOver: boolean;
+  completedRows: number[];
+  completedCols: number[];
 };
 
 export function SudokuBoard({
@@ -16,7 +19,9 @@ export function SudokuBoard({
   onCellClick,
   selectedCell,
   conflicts,
-  isGameOver
+  isGameOver,
+  completedRows,
+  completedCols,
 }: SudokuBoardProps) {
   return (
     <div className="relative w-full aspect-square bg-card p-2 rounded-xl shadow-lg">
@@ -29,6 +34,7 @@ export function SudokuBoard({
             const isConflict = conflicts.some(
               (p) => p.row === rowIndex && p.col === colIndex
             );
+            const isCompleted = completedRows.includes(rowIndex) || completedCols.includes(colIndex);
 
             return (
               <SudokuCell
@@ -39,6 +45,7 @@ export function SudokuBoard({
                 isInitial={isInitial}
                 isSelected={isSelected}
                 isConflict={isConflict}
+                isCompleted={isCompleted}
                 isDisabled={isGameOver}
                 onClick={() => onCellClick(rowIndex, colIndex)}
               />

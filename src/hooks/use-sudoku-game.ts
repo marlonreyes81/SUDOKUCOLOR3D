@@ -18,7 +18,34 @@ export function useSudokuGame() {
   const [isGameOver, setIsGameOver] = useState(false);
   const [conflicts, setConflicts] = useState<Position[]>([]);
   const [isWinDialogOpen, setIsWinDialogOpen] = useState(false);
+  const [completedRows, setCompletedRows] = useState<number[]>([]);
+  const [completedCols, setCompletedCols] = useState<number[]>([]);
   const { toast } = useToast();
+
+  const updateCompletedLines = useCallback((grid: Grid) => {
+    const newCompletedRows: number[] = [];
+    for (let i = 0; i < GRID_SIZE; i++) {
+      if (grid[i].every(cell => cell !== 0)) {
+        newCompletedRows.push(i);
+      }
+    }
+    setCompletedRows(newCompletedRows);
+
+    const newCompletedCols: number[] = [];
+    for (let j = 0; j < GRID_SIZE; j++) {
+      let colComplete = true;
+      for (let i = 0; i < GRID_SIZE; i++) {
+        if (grid[i][j] === 0) {
+          colComplete = false;
+          break;
+        }
+      }
+      if (colComplete) {
+        newCompletedCols.push(j);
+      }
+    }
+    setCompletedCols(newCompletedCols);
+  }, []);
 
   const startNewGame = useCallback((newDifficulty: Difficulty) => {
     setDifficulty(newDifficulty);
@@ -30,6 +57,8 @@ export function useSudokuGame() {
     setConflicts([]);
     setIsGameOver(false);
     setIsWinDialogOpen(false);
+    setCompletedRows([]);
+    setCompletedCols([]);
     localStorage.removeItem(SAVED_GAME_KEY);
   }, []);
 
@@ -42,6 +71,7 @@ export function useSudokuGame() {
         setSolution(savedGame.solution);
         setInitialGrid(savedGame.initialGrid);
         setUserGrid(savedGame.userGrid);
+        updateCompletedLines(savedGame.userGrid);
       } catch (error) {
         console.error("Failed to load saved game", error);
         startNewGame("easy");
@@ -49,7 +79,7 @@ export function useSudokuGame() {
     } else {
       startNewGame("easy");
     }
-  }, [startNewGame]);
+  }, [startNewGame, updateCompletedLines]);
 
   useEffect(() => {
     if (userGrid && solution && initialGrid) {
@@ -89,8 +119,17 @@ export function useSudokuGame() {
         duration: 2000,
       });
     } else {
-      // Check for row or column completion
+      updateCompletedLines(newGrid);
+      // Check for row or column completion to show toast
       const isRowComplete = newGrid[row].every(cell => cell !== 0);
+      const wasRowPreviouslyComplete = completedRows.includes(row);
+      if (isRowComplete && !wasRowPreviouslyComplete) {
+        toast({
+          title: "Row Complete!",
+          description: `You've successfully filled row ${row + 1}.`,
+        });
+      }
+      
       let isColComplete = true;
       for (let i = 0; i < GRID_SIZE; i++) {
         if (newGrid[i][col] === 0) {
@@ -98,14 +137,8 @@ export function useSudokuGame() {
           break;
         }
       }
-
-      if (isRowComplete) {
-        toast({
-          title: "Row Complete!",
-          description: `You've successfully filled row ${row + 1}.`,
-        });
-      }
-      if (isColComplete) {
+      const wasColPreviouslyComplete = completedCols.includes(col);
+      if (isColComplete && !wasColPreviouslyComplete) {
         toast({
           title: "Column Complete!",
           description: `You've successfully filled column ${col + 1}.`,
@@ -150,6 +183,8 @@ export function useSudokuGame() {
     conflicts,
     isGameOver,
     isWinDialogOpen,
+    completedRows,
+    completedCols,
     setIsWinDialogOpen,
     startNewGame,
     handleCellClick,
