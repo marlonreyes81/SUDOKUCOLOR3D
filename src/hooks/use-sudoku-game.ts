@@ -12,9 +12,11 @@ const SAVED_GAME_KEY = "sudokuColorGameState";
 const useAudio = (src: string) => {
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
   useEffect(() => {
-    const newAudio = new Audio(src);
-    newAudio.preload = "auto";
-    setAudio(newAudio);
+    if (typeof Audio !== "undefined") {
+      const newAudio = new Audio(src);
+      newAudio.preload = "auto";
+      setAudio(newAudio);
+    }
   }, [src]);
 
   const play = useCallback(() => {
@@ -146,7 +148,9 @@ export function useSudokuGame() {
     setCompletedBoxes([]);
     setHintsRemaining(DIFFICULTIES[newDifficulty].hints);
     updateColorCounts(puzzle);
-    localStorage.removeItem(SAVED_GAME_KEY);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(SAVED_GAME_KEY);
+    }
   }, [updateColorCounts]);
 
 
@@ -204,7 +208,9 @@ export function useSudokuGame() {
             playWinSound();
             setIsGameOver(true);
             setIsWinDialogOpen(true);
-            localStorage.removeItem(SAVED_GAME_KEY);
+            if (typeof window !== "undefined") {
+              localStorage.removeItem(SAVED_GAME_KEY);
+            }
           }
         }
       }
@@ -213,22 +219,24 @@ export function useSudokuGame() {
   );
   
   useEffect(() => {
-    const savedGameRaw = localStorage.getItem(SAVED_GAME_KEY);
-    if (savedGameRaw) {
-      try {
-        const savedGame = JSON.parse(savedGameRaw);
-        setDifficulty(savedGame.difficulty);
-        setSolution(savedGame.solution);
-        setInitialGrid(savedGame.initialGrid);
-        setUserGrid(savedGame.userGrid);
-        setHintsRemaining(savedGame.hintsRemaining ?? DIFFICULTIES[savedGame.difficulty].hints);
-        updateCompletedAreas(savedGame.userGrid);
-      } catch (error) {
-        console.error("Failed to load saved game", error);
+    if (typeof window !== "undefined") {
+      const savedGameRaw = localStorage.getItem(SAVED_GAME_KEY);
+      if (savedGameRaw) {
+        try {
+          const savedGame = JSON.parse(savedGameRaw);
+          setDifficulty(savedGame.difficulty);
+          setSolution(savedGame.solution);
+          setInitialGrid(savedGame.initialGrid);
+          setUserGrid(savedGame.userGrid);
+          setHintsRemaining(savedGame.hintsRemaining ?? DIFFICULTIES[savedGame.difficulty].hints);
+          updateCompletedAreas(savedGame.userGrid);
+        } catch (error) {
+          console.error("Failed to load saved game", error);
+          startNewGame("easy");
+        }
+      } else {
         startNewGame("easy");
       }
-    } else {
-      startNewGame("easy");
     }
     
     // Cleanup timeout on unmount
@@ -240,7 +248,7 @@ export function useSudokuGame() {
   }, [startNewGame, updateCompletedAreas]);
 
   useEffect(() => {
-    if (userGrid && solution && initialGrid) {
+    if (userGrid && solution && initialGrid && typeof window !== "undefined") {
       const gameState = {
         difficulty,
         solution,
@@ -297,7 +305,9 @@ export function useSudokuGame() {
       playWinSound();
       setIsGameOver(true);
       setIsWinDialogOpen(true);
-      localStorage.removeItem(SAVED_GAME_KEY);
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(SAVED_GAME_KEY);
+      }
     } else {
       playConflictSound();
       setConflicts(incorrectCells);
@@ -331,3 +341,5 @@ export function useSudokuGame() {
     handleHint,
   };
 }
+
+    
