@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import type { Grid, Difficulty, Position, CellValue } from "@/lib/types";
 import { generateSudoku, checkSolution, findConflicts } from "@/lib/sudoku";
 import { useToast } from "./use-toast";
-import { GRID_SIZE } from "@/lib/constants";
+import { GRID_SIZE, BOX_SIZE } from "@/lib/constants";
 
 const SAVED_GAME_KEY = "sudokuColorGameState";
 
@@ -20,9 +20,11 @@ export function useSudokuGame() {
   const [isWinDialogOpen, setIsWinDialogOpen] = useState(false);
   const [completedRows, setCompletedRows] = useState<number[]>([]);
   const [completedCols, setCompletedCols] = useState<number[]>([]);
+  const [completedBoxes, setCompletedBoxes] = useState<number[]>([]);
   const { toast } = useToast();
 
-  const updateCompletedLines = useCallback((grid: Grid) => {
+  const updateCompletedAreas = useCallback((grid: Grid) => {
+    // Check rows
     const newCompletedRows: number[] = [];
     for (let i = 0; i < GRID_SIZE; i++) {
       if (grid[i].every(cell => cell !== 0)) {
@@ -31,6 +33,7 @@ export function useSudokuGame() {
     }
     setCompletedRows(newCompletedRows);
 
+    // Check columns
     const newCompletedCols: number[] = [];
     for (let j = 0; j < GRID_SIZE; j++) {
       let colComplete = true;
@@ -45,6 +48,28 @@ export function useSudokuGame() {
       }
     }
     setCompletedCols(newCompletedCols);
+
+    // Check boxes
+    const newCompletedBoxes: number[] = [];
+    for (let boxRow = 0; boxRow < BOX_SIZE; boxRow++) {
+      for (let boxCol = 0; boxCol < BOX_SIZE; boxCol++) {
+        const boxIndex = boxRow * BOX_SIZE + boxCol;
+        let boxComplete = true;
+        for (let i = 0; i < BOX_SIZE; i++) {
+          for (let j = 0; j < BOX_SIZE; j++) {
+            if (grid[boxRow * BOX_SIZE + i][boxCol * BOX_SIZE + j] === 0) {
+              boxComplete = false;
+              break;
+            }
+          }
+          if (!boxComplete) break;
+        }
+        if (boxComplete) {
+          newCompletedBoxes.push(boxIndex);
+        }
+      }
+    }
+    setCompletedBoxes(newCompletedBoxes);
   }, []);
 
   const startNewGame = useCallback((newDifficulty: Difficulty) => {
@@ -59,6 +84,7 @@ export function useSudokuGame() {
     setIsWinDialogOpen(false);
     setCompletedRows([]);
     setCompletedCols([]);
+    setCompletedBoxes([]);
     localStorage.removeItem(SAVED_GAME_KEY);
   }, []);
 
@@ -71,7 +97,7 @@ export function useSudokuGame() {
         setSolution(savedGame.solution);
         setInitialGrid(savedGame.initialGrid);
         setUserGrid(savedGame.userGrid);
-        updateCompletedLines(savedGame.userGrid);
+        updateCompletedAreas(savedGame.userGrid);
       } catch (error) {
         console.error("Failed to load saved game", error);
         startNewGame("easy");
@@ -79,7 +105,7 @@ export function useSudokuGame() {
     } else {
       startNewGame("easy");
     }
-  }, [startNewGame, updateCompletedLines]);
+  }, [startNewGame, updateCompletedAreas]);
 
   useEffect(() => {
     if (userGrid && solution && initialGrid) {
@@ -119,29 +145,50 @@ export function useSudokuGame() {
         duration: 2000,
       });
     } else {
-      updateCompletedLines(newGrid);
-      // Check for row or column completion to show toast
-      const isRowComplete = newGrid[row].every(cell => cell !== 0);
+      updateCompletedAreas(newGrid);
+      
       const wasRowPreviouslyComplete = completedRows.includes(row);
-      if (isRowComplete && !wasRowPreviouslyComplete) {
+      const isRowNowComplete = newGrid[row].every(cell => cell !== 0);
+      if (isRowNowComplete && !wasRowPreviouslyComplete) {
         toast({
           title: "Row Complete!",
           description: `You've successfully filled row ${row + 1}.`,
         });
       }
       
-      let isColComplete = true;
+      const wasColPreviouslyComplete = completedCols.includes(col);
+      let isColNowComplete = true;
       for (let i = 0; i < GRID_SIZE; i++) {
         if (newGrid[i][col] === 0) {
-          isColComplete = false;
+          isColNowComplete = false;
           break;
         }
       }
-      const wasColPreviouslyComplete = completedCols.includes(col);
-      if (isColComplete && !wasColPreviouslyComplete) {
+      if (isColNowComplete && !wasColPreviouslyComplete) {
         toast({
           title: "Column Complete!",
           description: `You've successfully filled column ${col + 1}.`,
+        });
+      }
+
+      const boxIndex = Math.floor(row / BOX_SIZE) * BOX_SIZE + Math.floor(col / BOX_SIZE);
+      const wasBoxPreviouslyComplete = completedBoxes.includes(boxIndex);
+      let isBoxNowComplete = true;
+      const boxStartRow = Math.floor(row / BOX_SIZE) * BOX_SIZE;
+      const boxStartCol = Math.floor(col / BOX_SIZE) * BOX_SIZE;
+      for (let i = 0; i < BOX_SIZE; i++) {
+        for (let j = 0; j < BOX_SIZE; j++) {
+          if (newGrid[boxStartRow + i][boxStartCol + j] === 0) {
+            isBoxNowComplete = false;
+            break;
+          }
+        }
+        if (!isBoxNowComplete) break;
+      }
+      if (isBoxNowComplete && !wasBoxPreviouslyComplete) {
+        toast({
+          title: "Box Complete!",
+          description: `You've successfully filled a 3x3 box.`,
         });
       }
 
@@ -185,6 +232,7 @@ export function useSudokuGame() {
     isWinDialogOpen,
     completedRows,
     completedCols,
+    completedBoxes,
     setIsWinDialogOpen,
     startNewGame,
     handleCellClick,
@@ -192,3 +240,5 @@ export function useSudokuGame() {
     checkBoard,
   };
 }
+
+    

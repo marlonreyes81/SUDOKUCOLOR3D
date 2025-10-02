@@ -26,6 +26,7 @@ export function GameContainer() {
     isWinDialogOpen,
     completedRows,
     completedCols,
+    completedBoxes,
     setIsWinDialogOpen,
     startNewGame,
     handleCellClick,
@@ -58,6 +59,7 @@ export function GameContainer() {
         isGameOver={isGameOver}
         completedRows={completedRows}
         completedCols={completedCols}
+        completedBoxes={completedBoxes}
       />
       <ColorPalette onColorSelect={handleColorSelect} disabled={isGameOver} />
       
@@ -79,3 +81,5 @@ export function GameContainer() {
     </div>
   );
 }
+
+    

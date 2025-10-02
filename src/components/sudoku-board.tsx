@@ -1,6 +1,7 @@
 
 import type { Grid, Position } from "@/lib/types";
 import { SudokuCell } from "./sudoku-cell";
+import { BOX_SIZE } from "@/lib/constants";
 
 type SudokuBoardProps = {
   grid: Grid;
@@ -11,6 +12,7 @@ type SudokuBoardProps = {
   isGameOver: boolean;
   completedRows: number[];
   completedCols: number[];
+  completedBoxes: number[];
 };
 
 export function SudokuBoard({
@@ -22,6 +24,7 @@ export function SudokuBoard({
   isGameOver,
   completedRows,
   completedCols,
+  completedBoxes,
 }: SudokuBoardProps) {
   return (
     <div className="relative w-full aspect-square bg-card p-2 rounded-xl shadow-lg">
@@ -34,7 +37,8 @@ export function SudokuBoard({
             const isConflict = conflicts.some(
               (p) => p.row === rowIndex && p.col === colIndex
             );
-            const isCompleted = completedRows.includes(rowIndex) || completedCols.includes(colIndex);
+            const boxIndex = Math.floor(rowIndex / BOX_SIZE) * BOX_SIZE + Math.floor(colIndex / BOX_SIZE);
+            const isCompleted = completedRows.includes(rowIndex) || completedCols.includes(colIndex) || completedBoxes.includes(boxIndex);
 
             return (
               <SudokuCell
@@ -63,3 +67,5 @@ export function SudokuBoard({
     </div>
   );
 }
+
+    
