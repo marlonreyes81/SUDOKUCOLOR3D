@@ -9,6 +9,24 @@ import { GRID_SIZE, BOX_SIZE, DIFFICULTIES } from "@/lib/constants";
 
 const SAVED_GAME_KEY = "sudokuColorGameState";
 
+const useAudio = (src: string) => {
+  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    const newAudio = new Audio(src);
+    newAudio.preload = "auto";
+    setAudio(newAudio);
+  }, [src]);
+
+  const play = useCallback(() => {
+    if (audio) {
+      audio.currentTime = 0;
+      audio.play().catch(e => console.error("Audio play failed:", e));
+    }
+  }, [audio]);
+
+  return play;
+};
+
 export function useSudokuGame() {
   const [difficulty, setDifficulty] = useState<Difficulty>("easy");
   const [solution, setSolution] = useState<Grid | null>(null);
@@ -26,6 +44,10 @@ export function useSudokuGame() {
   const [hintsRemaining, setHintsRemaining] = useState(3);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
+  
+  const playCompleteSound = useAudio("/sounds/complete.mp3");
+  const playConflictSound = useAudio("/sounds/conflict.mp3");
+  const playWinSound = useAudio("/sounds/win.mp3");
 
   const updateColorCounts = useCallback((grid: Grid) => {
     const counts: Record<number, number> = {};
@@ -45,11 +67,17 @@ export function useSudokuGame() {
   }, []);
 
   const updateCompletedAreas = useCallback((grid: Grid) => {
+    let playedSound = false;
     // Check rows
     const newCompletedRows: number[] = [];
     for (let i = 0; i < GRID_SIZE; i++) {
       if (grid[i].every(cell => cell !== 0)) {
         newCompletedRows.push(i);
+        if (!completedRows.includes(i)) {
+          playCompleteSound();
+          playedSound = true;
+          toast({ title: "Row Complete!", description: `You've successfully filled row ${i + 1}.` });
+        }
       }
     }
     setCompletedRows(newCompletedRows);
@@ -64,7 +92,12 @@ export function useSudokuGame() {
           break;
         }
       }
-      if (colComplete) {
+      if (colComplete && !completedCols.includes(j)) {
+        if (!playedSound) playCompleteSound();
+        playedSound = true;
+        newCompletedCols.push(j);
+        toast({ title: "Column Complete!", description: `You've successfully filled column ${j + 1}.` });
+      } else if (colComplete) {
         newCompletedCols.push(j);
       }
     }
@@ -85,14 +118,18 @@ export function useSudokuGame() {
           }
           if (!boxComplete) break;
         }
-        if (boxComplete) {
-          newCompletedBoxes.push(boxIndex);
+        if (boxComplete && !completedBoxes.includes(boxIndex)) {
+            if (!playedSound) playCompleteSound();
+            newCompletedBoxes.push(boxIndex);
+            toast({ title: "Box Complete!", description: `You've successfully filled a 3x3 box.` });
+        } else if (boxComplete) {
+            newCompletedBoxes.push(boxIndex);
         }
       }
     }
     setCompletedBoxes(newCompletedBoxes);
     updateColorCounts(grid);
-  }, [updateColorCounts]);
+  }, [updateColorCounts, completedRows, completedCols, completedBoxes, playCompleteSound, toast]);
 
     const startNewGame = useCallback((newDifficulty: Difficulty) => {
     setDifficulty(newDifficulty);
@@ -121,11 +158,21 @@ export function useSudokuGame() {
       newGrid[row][col] = colorValue;
       setUserGrid(newGrid);
 
+      // Clear previous conflicts for this cell before re-evaluating
+      setConflicts(c => c.filter(p => p.row !== row || p.col !== col));
+
+      if (colorValue === 0) { // Eraser logic
+          updateColorCounts(newGrid);
+          updateCompletedAreas(newGrid);
+          return;
+      }
+
       // We clear conflicts from other cells, and only show new ones
       const currentConflicts = findConflicts(newGrid, row, col);
       setConflicts(currentConflicts);
 
       if (currentConflicts.length > 0) {
+        playConflictSound();
         toast({
           title: "Conflict!",
           description:
@@ -149,57 +196,12 @@ export function useSudokuGame() {
 
         updateCompletedAreas(newGrid);
 
-        const wasRowPreviouslyComplete = completedRows.includes(row);
-        const isRowNowComplete = newGrid[row].every((cell) => cell !== 0);
-        if (isRowNowComplete && !wasRowPreviouslyComplete) {
-          toast({
-            title: "Row Complete!",
-            description: `You've successfully filled row ${row + 1}.`,
-          });
-        }
-
-        const wasColPreviouslyComplete = completedCols.includes(col);
-        let isColNowComplete = true;
-        for (let i = 0; i < GRID_SIZE; i++) {
-          if (newGrid[i][col] === 0) {
-            isColNowComplete = false;
-            break;
-          }
-        }
-        if (isColNowComplete && !wasColPreviouslyComplete) {
-          toast({
-            title: "Column Complete!",
-            description: `You've successfully filled column ${col + 1}.`,
-          });
-        }
-
-        const boxIndex =
-          Math.floor(row / BOX_SIZE) * BOX_SIZE + Math.floor(col / BOX_SIZE);
-        const wasBoxPreviouslyComplete = completedBoxes.includes(boxIndex);
-        let isBoxNowComplete = true;
-        const boxStartRow = Math.floor(row / BOX_SIZE) * BOX_SIZE;
-        const boxStartCol = Math.floor(col / BOX_SIZE) * BOX_SIZE;
-        for (let i = 0; i < BOX_SIZE; i++) {
-          for (let j = 0; j < BOX_SIZE; j++) {
-            if (newGrid[boxStartRow + i][boxStartCol + j] === 0) {
-              isBoxNowComplete = false;
-              break;
-            }
-          }
-          if (!isBoxNowComplete) break;
-        }
-        if (isBoxNowComplete && !wasBoxPreviouslyComplete) {
-          toast({
-            title: "Box Complete!",
-            description: `You've successfully filled a 3x3 box.`,
-          });
-        }
-
         // Check for win condition
         const isFilled = newGrid.every((row) => row.every((cell) => cell !== 0));
         if (isFilled) {
           const { isCorrect } = checkSolution(newGrid, solution!);
           if (isCorrect) {
+            playWinSound();
             setIsGameOver(true);
             setIsWinDialogOpen(true);
             localStorage.removeItem(SAVED_GAME_KEY);
@@ -207,7 +209,7 @@ export function useSudokuGame() {
         }
       }
     },
-    [userGrid, isGameOver, solution, toast, updateColorCounts, updateCompletedAreas, completedRows, completedCols, completedBoxes]
+    [userGrid, isGameOver, solution, toast, updateColorCounts, updateCompletedAreas, playConflictSound, playWinSound]
   );
   
   useEffect(() => {
@@ -258,7 +260,7 @@ export function useSudokuGame() {
   };
 
   const handleColorSelect = (colorValue: CellValue) => {
-    if (!selectedCell || colorValue === 0) return;
+    if (!selectedCell) return;
     placeColorOnBoard(selectedCell.row, selectedCell.col, colorValue);
   };
   
@@ -292,10 +294,12 @@ export function useSudokuGame() {
     if (!userGrid || !solution) return;
     const { isCorrect, incorrectCells } = checkSolution(userGrid, solution);
     if (isCorrect) {
+      playWinSound();
       setIsGameOver(true);
       setIsWinDialogOpen(true);
       localStorage.removeItem(SAVED_GAME_KEY);
     } else {
+      playConflictSound();
       setConflicts(incorrectCells);
       toast({
         title: "Not quite...",
