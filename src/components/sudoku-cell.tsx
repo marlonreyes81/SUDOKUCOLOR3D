@@ -50,9 +50,11 @@ export function SudokuCell({
         <div
           className={cn(
             "w-[85%] h-[85%] transition-all rounded-md",
-            colorClass,
-            "shadow-2xl shadow-black/50"
+            colorClass
           )}
+          style={{
+            boxShadow: 'inset 0.2em 0.2em 0.2em 0 rgba(255,255,255,0.5), inset -0.2em -0.2em 0.2em 0 rgba(0,0,0,0.5)'
+          }}
         />
       )}
     </button>
