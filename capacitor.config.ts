@@ -1,12 +1,11 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.getcapacitor.app',
+  appId: 'com.sudokucolor.game',
   appName: 'Sudoku Color 3D',
   webDir: 'out',
   server: {
-    url: 'http://localhost:9002',
-    cleartext: true
+    androidScheme: 'https'
   }
 };
 
