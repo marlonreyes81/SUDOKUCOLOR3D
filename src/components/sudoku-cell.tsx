@@ -20,6 +20,8 @@ export function SudokuCell({
   isConflict,
   isDisabled,
   onClick,
+  row,
+  col,
 }: SudokuCellProps) {
   const colorClass = value !== 0 ? COLORS[value].class : "";
 

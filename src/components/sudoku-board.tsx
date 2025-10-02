@@ -1,6 +1,5 @@
 import type { Grid, Position } from "@/lib/types";
 import { SudokuCell } from "./sudoku-cell";
-import { GRID_SIZE } from "@/lib/constants";
 
 type SudokuBoardProps = {
   grid: Grid;
@@ -35,13 +34,13 @@ export function SudokuBoard({
               <SudokuCell
                 key={`${rowIndex}-${colIndex}`}
                 value={value}
+                row={rowIndex}
+                col={colIndex}
                 isInitial={isInitial}
                 isSelected={isSelected}
                 isConflict={isConflict}
                 isDisabled={isGameOver}
                 onClick={() => onCellClick(rowIndex, colIndex)}
-                row={rowIndex}
-                col={colIndex}
               />
             );
           })
