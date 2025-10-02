@@ -113,14 +113,14 @@ export default {
           },
         },
         'completed-border': {
-          '0%, 100%': { boxShadow: 'inset 0 0 0 2px hsl(var(--primary))' },
-          '50%': { boxShadow: 'inset 0 0 0 2px hsl(var(--accent))' },
+          '0%, 100%': { boxShadow: 'inset 0 0 0 3px hsl(var(--primary))' },
+          '50%': { boxShadow: 'inset 0 0 0 3px hsl(var(--accent))' },
         }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
-        'completed-border': 'completed-border 2s ease-in-out infinite',
+        'completed-border': 'completed-border 1.5s ease-in-out infinite',
       },
     },
   },
