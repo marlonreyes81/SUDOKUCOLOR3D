@@ -1,20 +1,36 @@
+
 export function Logo() {
+  const colors = [
+    'text-red-500',
+    'text-orange-500',
+    'text-yellow-400',
+    'text-green-500',
+    'text-blue-500',
+    'text-purple-500',
+  ];
+  const title = 'SUDOKU COLOR';
+
   return (
     <h1 className="text-4xl md:text-5xl font-bold text-center mb-6 md:mb-8 font-headline tracking-tight select-none">
-      <span className="text-red-500">S</span>
-      <span className="text-yellow-400">U</span>
-      <span className="text-blue-500">D</span>
-      <span className="text-green-500">O</span>
-      <span className="text-purple-500">K</span>
-      <span className="text-orange-500">U</span>
-      <span className="text-pink-400"> </span>
-      <span className="text-gray-900 dark:text-gray-300">C</span>
-      <span className="text-black dark:text-white drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)] dark:drop-shadow-none">
-        O
-      </span>
-      <span className="text-red-500">L</span>
-      <span className="text-yellow-400">O</span>
-      <span className="text-blue-500">R</span>
+      {title.split('').map((letter, index) => {
+        if (letter === ' ') {
+          return <span key={index}> </span>;
+        }
+        const colorClass = colors[index % colors.length];
+        const textColor = letter === 'O' && index > 6 ? (index % 2 === 0 ? 'text-white' : 'text-gray-900 dark:text-gray-200') : colorClass;
+        return (
+          <span
+            key={index}
+            className={`${textColor} transition-transform duration-300 ease-in-out hover:scale-110`}
+            style={{
+              textShadow:
+                '0 1px 0 #ccc, 0 2px 0 #c9c9c9, 0 3px 0 #bbb, 0 4px 0 #b9b9b9, 0 5px 0 #aaa, 0 6px 1px rgba(0,0,0,.1), 0 0 5px rgba(0,0,0,.1), 0 1px 3px rgba(0,0,0,.3), 0 3px 5px rgba(0,0,0,.2), 0 5px 10px rgba(0,0,0,.25), 0 10px 10px rgba(0,0,0,.2), 0 20px 20px rgba(0,0,0,.15)',
+            }}
+          >
+            {letter}
+          </span>
+        );
+      })}
     </h1>
   );
 }
