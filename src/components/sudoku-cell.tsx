@@ -51,7 +51,7 @@ export function SudokuCell({
           className={cn(
             "w-[85%] h-[85%] rounded-md transition-all",
             colorClass,
-            "shadow-md", // The "soft 3D" or "alto relieve" effect
+            "shadow-lg", // The "soft 3D" or "alto relieve" effect
             isInitial ? "font-bold" : ""
           )}
         />
