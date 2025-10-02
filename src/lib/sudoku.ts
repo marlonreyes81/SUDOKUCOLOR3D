@@ -71,17 +71,20 @@ function createPuzzle(solution: Grid, difficulty: Difficulty): Grid {
   return puzzle;
 }
 
-export function generateSudoku(
+export async function generateSudoku(
   difficulty: Difficulty
-): { solution: Grid; puzzle: Grid } {
-  const solution: Grid = Array.from({ length: GRID_SIZE }, () =>
-    Array(GRID_SIZE).fill(0)
-  );
-  fillGrid(solution);
-
-  const puzzle = createPuzzle(solution, difficulty);
-
-  return { solution, puzzle };
+): Promise<{ solution: Grid; puzzle: Grid }> {
+  return new Promise((resolve) => {
+    // Allow the UI to update before starting the heavy computation
+    setTimeout(() => {
+      const solution: Grid = Array.from({ length: GRID_SIZE }, () =>
+        Array(GRID_SIZE).fill(0)
+      );
+      fillGrid(solution);
+      const puzzle = createPuzzle(solution, difficulty);
+      resolve({ solution, puzzle });
+    }, 50); // A small delay
+  });
 }
 
 export function checkSolution(

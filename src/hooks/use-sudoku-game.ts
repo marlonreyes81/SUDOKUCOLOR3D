@@ -134,9 +134,13 @@ export function useSudokuGame() {
     updateColorCounts(grid);
   }, [updateColorCounts, completedRows, completedCols, completedBoxes, playCompleteSound, toast]);
 
-    const startNewGame = useCallback((newDifficulty: Difficulty) => {
+    const startNewGame = useCallback(async (newDifficulty: Difficulty) => {
     setDifficulty(newDifficulty);
-    const { solution, puzzle } = generateSudoku(newDifficulty);
+    setInitialGrid(null); // Show loading
+    setUserGrid(null);
+
+    const { solution, puzzle } = await generateSudoku(newDifficulty);
+    
     setSolution(solution);
     setInitialGrid(puzzle);
     setUserGrid(puzzle);
@@ -221,26 +225,30 @@ export function useSudokuGame() {
   );
   
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const savedGameRaw = localStorage.getItem(SAVED_GAME_KEY);
-      if (savedGameRaw) {
-        try {
-          const savedGame = JSON.parse(savedGameRaw);
-          setDifficulty(savedGame.difficulty);
-          setSolution(savedGame.solution);
-          setInitialGrid(savedGame.initialGrid);
-          setUserGrid(savedGame.userGrid);
-          setHintsRemaining(savedGame.hintsRemaining ?? DIFFICULTIES[savedGame.difficulty].hints);
-          setTime(savedGame.time ?? 0);
-          updateCompletedAreas(savedGame.userGrid);
-        } catch (error) {
-          console.error("Failed to load saved game", error);
-          startNewGame("easy");
+    const initializeGame = async () => {
+      if (typeof window !== "undefined") {
+        const savedGameRaw = localStorage.getItem(SAVED_GAME_KEY);
+        if (savedGameRaw) {
+          try {
+            const savedGame = JSON.parse(savedGameRaw);
+            setDifficulty(savedGame.difficulty);
+            setSolution(savedGame.solution);
+            setInitialGrid(savedGame.initialGrid);
+            setUserGrid(savedGame.userGrid);
+            setHintsRemaining(savedGame.hintsRemaining ?? DIFFICULTIES[savedGame.difficulty].hints);
+            setTime(savedGame.time ?? 0);
+            updateCompletedAreas(savedGame.userGrid);
+          } catch (error) {
+            console.error("Failed to load saved game", error);
+            await startNewGame("easy");
+          }
+        } else {
+          await startNewGame("easy");
         }
-      } else {
-        startNewGame("easy");
       }
-    }
+    };
+  
+    initializeGame();
     
     // Cleanup timeout on unmount
     return () => {
@@ -248,7 +256,8 @@ export function useSudokuGame() {
         clearTimeout(animationTimeoutRef.current);
       }
     };
-  }, []); // Note: startNewGame is removed from here
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (userGrid && solution && initialGrid && typeof window !== "undefined") {
