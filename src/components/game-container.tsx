@@ -14,6 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { GRID_SIZE } from "@/lib/constants";
 
 export function GameContainer() {
   const {
@@ -27,6 +28,7 @@ export function GameContainer() {
     completedRows,
     completedCols,
     completedBoxes,
+    colorCounts,
     setIsWinDialogOpen,
     startNewGame,
     handleCellClick,
@@ -61,7 +63,12 @@ export function GameContainer() {
         completedCols={completedCols}
         completedBoxes={completedBoxes}
       />
-      <ColorPalette onColorSelect={handleColorSelect} disabled={isGameOver} />
+      <ColorPalette
+        onColorSelect={handleColorSelect}
+        disabled={isGameOver}
+        colorCounts={colorCounts}
+        maxCount={GRID_SIZE}
+      />
       
       <AlertDialog open={isWinDialogOpen} onOpenChange={setIsWinDialogOpen}>
         <AlertDialogContent>
@@ -81,5 +88,3 @@ export function GameContainer() {
     </div>
   );
 }
-
-    

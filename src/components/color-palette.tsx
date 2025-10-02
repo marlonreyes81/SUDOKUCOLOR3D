@@ -1,3 +1,4 @@
+
 import { Eraser } from "lucide-react";
 import { COLORS } from "@/lib/constants";
 import type { CellValue } from "@/lib/types";
@@ -7,24 +8,38 @@ import { cn } from "@/lib/utils";
 type ColorPaletteProps = {
   onColorSelect: (value: CellValue) => void;
   disabled?: boolean;
+  colorCounts?: Record<number, number>;
+  maxCount?: number;
 };
 
-export function ColorPalette({ onColorSelect, disabled }: ColorPaletteProps) {
+export function ColorPalette({
+  onColorSelect,
+  disabled,
+  colorCounts = {},
+  maxCount = 9,
+}: ColorPaletteProps) {
   return (
     <div className="w-full bg-card p-2 rounded-lg shadow-md">
       <div className="grid grid-cols-10 gap-2">
-        {Object.entries(COLORS).map(([value, { class: colorClass }]) => (
-          <button
-            key={value}
-            onClick={() => onColorSelect(Number(value) as CellValue)}
-            disabled={disabled}
-            className={cn(
-              "aspect-square w-full rounded-md shadow-md hover:scale-110 active:scale-95 transition-transform duration-150 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100",
-              colorClass
-            )}
-            aria-label={`Select color ${COLORS[Number(value) as keyof typeof COLORS].name}`}
-          />
-        ))}
+        {Object.entries(COLORS).map(([valueStr, { class: colorClass }]) => {
+          const value = Number(valueStr) as CellValue;
+          const isColorDisabled =
+            disabled || (colorCounts[value] || 0) >= maxCount;
+          return (
+            <button
+              key={value}
+              onClick={() => onColorSelect(value)}
+              disabled={isColorDisabled}
+              className={cn(
+                "aspect-square w-full rounded-md shadow-md hover:scale-110 active:scale-95 transition-transform duration-150 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100",
+                colorClass
+              )}
+              aria-label={`Select color ${
+                COLORS[value as keyof typeof COLORS].name
+              }`}
+            />
+          );
+        })}
         <Button
           variant="outline"
           size="icon"

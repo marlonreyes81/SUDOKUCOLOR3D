@@ -21,7 +21,24 @@ export function useSudokuGame() {
   const [completedRows, setCompletedRows] = useState<number[]>([]);
   const [completedCols, setCompletedCols] = useState<number[]>([]);
   const [completedBoxes, setCompletedBoxes] = useState<number[]>([]);
+  const [colorCounts, setColorCounts] = useState<Record<number, number>>({});
   const { toast } = useToast();
+
+  const updateColorCounts = useCallback((grid: Grid) => {
+    const counts: Record<number, number> = {};
+    for (let i = 1; i <= GRID_SIZE; i++) {
+      counts[i] = 0;
+    }
+    for (let r = 0; r < GRID_SIZE; r++) {
+      for (let c = 0; c < GRID_SIZE; c++) {
+        const value = grid[r][c];
+        if (value !== 0) {
+          counts[value]++;
+        }
+      }
+    }
+    setColorCounts(counts);
+  }, []);
 
   const updateCompletedAreas = useCallback((grid: Grid) => {
     // Check rows
@@ -70,7 +87,8 @@ export function useSudokuGame() {
       }
     }
     setCompletedBoxes(newCompletedBoxes);
-  }, []);
+    updateColorCounts(grid);
+  }, [updateColorCounts]);
 
   const startNewGame = useCallback((newDifficulty: Difficulty) => {
     setDifficulty(newDifficulty);
@@ -85,8 +103,9 @@ export function useSudokuGame() {
     setCompletedRows([]);
     setCompletedCols([]);
     setCompletedBoxes([]);
+    updateColorCounts(puzzle);
     localStorage.removeItem(SAVED_GAME_KEY);
-  }, []);
+  }, [updateColorCounts]);
 
   useEffect(() => {
     const savedGameRaw = localStorage.getItem(SAVED_GAME_KEY);
@@ -98,6 +117,7 @@ export function useSudokuGame() {
         setInitialGrid(savedGame.initialGrid);
         setUserGrid(savedGame.userGrid);
         updateCompletedAreas(savedGame.userGrid);
+        updateColorCounts(savedGame.userGrid);
       } catch (error) {
         console.error("Failed to load saved game", error);
         startNewGame("easy");
@@ -105,7 +125,7 @@ export function useSudokuGame() {
     } else {
       startNewGame("easy");
     }
-  }, [startNewGame, updateCompletedAreas]);
+  }, [startNewGame, updateCompletedAreas, updateColorCounts]);
 
   useEffect(() => {
     if (userGrid && solution && initialGrid) {
@@ -233,6 +253,7 @@ export function useSudokuGame() {
     completedRows,
     completedCols,
     completedBoxes,
+    colorCounts,
     setIsWinDialogOpen,
     startNewGame,
     handleCellClick,
@@ -240,5 +261,3 @@ export function useSudokuGame() {
     checkBoard,
   };
 }
-
-    
