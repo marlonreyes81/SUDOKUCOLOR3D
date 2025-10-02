@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.sudokucolor3d.app',
-  appName: 'SUDOKU COLOR 3D',
+  appId: 'com.getcapacitor.app',
+  appName: 'nextn',
   webDir: 'out',
   bundledWebRuntime: false,
 };

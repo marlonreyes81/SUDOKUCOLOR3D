@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">SUDOKU COLOR 3D</string>
-    <string name="title_activity_main">SUDOKU COLOR 3D</string>
-    <string name="package_name">com.sudokucolor3d.app</string>
-    <string name="custom_url_scheme">com.sudokucolor3d.app</string>
+    <string name="app_name">nextn</string>
+    <string name="title_activity_main">nextn</string>
+    <string name="package_name">com.getcapacitor.app</string>
+    <string name="custom_url_scheme">com.getcapacitor.app</string>
 </resources>
