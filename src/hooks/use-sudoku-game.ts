@@ -1,0 +1,134 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import type { Grid, Difficulty, Position, CellValue } from "@/lib/types";
+import { generateSudoku, checkSolution, findConflicts } from "@/lib/sudoku";
+import { useToast } from "./use-toast";
+
+const SAVED_GAME_KEY = "sudokuColorGameState";
+
+export function useSudokuGame() {
+  const [difficulty, setDifficulty] = useState<Difficulty>("easy");
+  const [solution, setSolution] = useState<Grid | null>(null);
+  const [initialGrid, setInitialGrid] = useState<Grid | null>(null);
+  const [userGrid, setUserGrid] = useState<Grid | null>(null);
+  const [selectedCell, setSelectedCell] = useState<Position | null>(null);
+  const [isGameOver, setIsGameOver] = useState(false);
+  const [conflicts, setConflicts] = useState<Position[]>([]);
+  const [isWinDialogOpen, setIsWinDialogOpen] = useState(false);
+  const { toast } = useToast();
+
+  const startNewGame = useCallback((newDifficulty: Difficulty) => {
+    setDifficulty(newDifficulty);
+    const { solution, puzzle } = generateSudoku(newDifficulty);
+    setSolution(solution);
+    setInitialGrid(puzzle);
+    setUserGrid(puzzle);
+    setSelectedCell(null);
+    setConflicts([]);
+    setIsGameOver(false);
+    setIsWinDialogOpen(false);
+    localStorage.removeItem(SAVED_GAME_KEY);
+  }, []);
+
+  useEffect(() => {
+    const savedGameRaw = localStorage.getItem(SAVED_GAME_KEY);
+    if (savedGameRaw) {
+      try {
+        const savedGame = JSON.parse(savedGameRaw);
+        setDifficulty(savedGame.difficulty);
+        setSolution(savedGame.solution);
+        setInitialGrid(savedGame.initialGrid);
+        setUserGrid(savedGame.userGrid);
+      } catch (error) {
+        console.error("Failed to load saved game", error);
+        startNewGame("easy");
+      }
+    } else {
+      startNewGame("easy");
+    }
+  }, [startNewGame]);
+
+  useEffect(() => {
+    if (userGrid && solution && initialGrid) {
+      const gameState = {
+        difficulty,
+        solution,
+        initialGrid,
+        userGrid,
+      };
+      localStorage.setItem(SAVED_GAME_KEY, JSON.stringify(gameState));
+    }
+  }, [userGrid, solution, initialGrid, difficulty]);
+
+  const handleCellClick = (row: number, col: number) => {
+    if (isGameOver) return;
+    if (initialGrid && initialGrid[row][col] === 0) {
+      setSelectedCell({ row, col });
+    }
+  };
+
+  const handleColorSelect = (colorValue: CellValue) => {
+    if (!selectedCell || !userGrid || isGameOver) return;
+
+    const { row, col } = selectedCell;
+    const newGrid = userGrid.map((r) => [...r]) as Grid;
+    newGrid[row][col] = colorValue;
+    setUserGrid(newGrid);
+
+    const currentConflicts = findConflicts(newGrid, row, col);
+    setConflicts(currentConflicts);
+
+    if (currentConflicts.length > 0) {
+      toast({
+        title: "Conflict!",
+        description: "That color conflicts with another in the same row, column, or box.",
+        variant: "destructive",
+        duration: 2000,
+      });
+    } else {
+      // Check for win condition
+      const isFilled = newGrid.every(row => row.every(cell => cell !== 0));
+      if (isFilled) {
+        const { isCorrect } = checkSolution(newGrid, solution!);
+        if (isCorrect) {
+          setIsGameOver(true);
+          setIsWinDialogOpen(true);
+          localStorage.removeItem(SAVED_GAME_KEY);
+        }
+      }
+    }
+  };
+
+  const checkBoard = () => {
+    if (!userGrid || !solution) return;
+    const { isCorrect, incorrectCells } = checkSolution(userGrid, solution);
+    if (isCorrect) {
+      setIsGameOver(true);
+      setIsWinDialogOpen(true);
+      localStorage.removeItem(SAVED_GAME_KEY);
+    } else {
+      setConflicts(incorrectCells);
+      toast({
+        title: "Not quite...",
+        description: "There are some mistakes on the board. Keep trying!",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return {
+    difficulty,
+    initialGrid,
+    userGrid,
+    selectedCell,
+    conflicts,
+    isGameOver,
+    isWinDialogOpen,
+    setIsWinDialogOpen,
+    startNewGame,
+    handleCellClick,
+    handleColorSelect,
+    checkBoard,
+  };
+}
